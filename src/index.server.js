@@ -3,6 +3,7 @@ import ReactDOMServer from 'react-dom/server';
 import express from 'express';
 import {StaticRouter} from 'react-router-dom/server';
 import App from './App';
+import path from 'path';
 
 const app = express();
 
@@ -20,6 +21,11 @@ const serverRender = (req, res, next) => {
     res.send(root);
 }
 
+const serve = express.static(path.resolve('./build'), {
+    index: false // "/" 경로에서 index.html을 보여주지 않도록 설정
+})
+
+app.use(serve); // serverRender 이전에 위치해야 함
 app.use(serverRender);
 
 app.listen(5000, () => {
