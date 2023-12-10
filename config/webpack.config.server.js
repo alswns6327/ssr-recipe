@@ -128,10 +128,10 @@ module.exports = {
                     // url-loader를 위한 설정
                     {
                         test: [/\.bmp$/, /\.gif$/, /\.jpg?g$/, /\.png$/],
-                        loader: require.resolve('url-loader'),
+                        loader: require.resolve('resolve-url-loader'),
                         options: {
                             emitFile: false, // 파일을 따로 저장하지 않는 옵션
-                            limit: 10000, // 원래는 9.76KB 가 넘어가면 파일로 저장하나 emitFile 값이 False일떈 경로만 준비하고 파일은 저장하지 ㅇ낳음
+                            limit: 10000, // 원래는 9.76KB 가 넘어가면 파일로 저장하나 emitFile 값이 False일떈 경로만 준비하고 파일은 저장하지 않음
                             name: 'static/media/[name].[hash:8].[ext]',
                         }
                     },
@@ -157,5 +157,8 @@ module.exports = {
         nodeExternals({
             allowlist: [/@babel/],    
         }),
+    ],
+    plugins: [
+        new webpack.DefinePlugin(env.stringified), // 환경변수를 주입해줍니다.
     ],
 }
