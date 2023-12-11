@@ -9,7 +9,9 @@ import {thunk} from 'redux-thunk';
 import rootReducer from './modules';
 import { Provider } from 'react-redux';
 
-const stroe = createStore(rootReducer, applyMiddleware(thunk));
+const stroe = createStore(rootReducer,
+   window.__PRELOADED_STATE__, // 초기값으로 사용
+   applyMiddleware(thunk));
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

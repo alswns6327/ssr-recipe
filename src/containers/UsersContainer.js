@@ -1,6 +1,7 @@
 import React, {useEffect} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import { getUsers } from '../modules/users';
+import { Preloader } from '../lib/PreloadContext';
 import Users from '../components/Users';
 
 const UsersContainer = () => {
@@ -14,7 +15,10 @@ const UsersContainer = () => {
     }, [dispatch, users]);
 
     return (
-        <Users users={users}/>
+        <>
+            <Users users={users}/>
+            <Preloader resolve={()=>dispatch(getUsers)}/>
+        </>
     );
 };
 
