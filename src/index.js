@@ -6,12 +6,17 @@ import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
 import { applyMiddleware, createStore } from 'redux';
 import {thunk} from 'redux-thunk';
-import rootReducer from './modules';
+import rootReducer, { rootSaga } from './modules';
 import { Provider } from 'react-redux';
+import createSagaMiddleware from '@redux-saga/core';
+
+const sagaMiddleware = createSagaMiddleware();
 
 const stroe = createStore(rootReducer,
    window.__PRELOADED_STATE__, // 초기값으로 사용
-   applyMiddleware(thunk));
+   applyMiddleware(thunk, sagaMiddleware));
+
+sagaMiddleware.run(rootSaga);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
