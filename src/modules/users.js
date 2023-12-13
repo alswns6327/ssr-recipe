@@ -33,6 +33,7 @@ const getUserById = id =>
 
 function* getUserSaga(action){
     try{
+        console.log('sage2');
         const response = yield call(getUserById, action.payload);
         yield put(getUserSuccess(response.data));
     }catch(e){
@@ -41,6 +42,7 @@ function* getUserSaga(action){
 }
 
 export function* userSaga(){
+    console.log('sage1');
     yield takeEvery(GET_USER, getUserSaga);
 }
 
@@ -66,6 +68,7 @@ function users(state=initialState, action){
         case GET_USERS_FAILURE:
             return {...state, loading: {...state.loading, users: false}, error: {...state.error, users: action.payload}};
         case GET_USER:
+            console.log('saga3');
             return {...state, loading: {...state.loading, user: true}};
         case GET_USER_SUCCESS:
             return {...state, loading: {...state.loading, user: false}, user : action.payload};
