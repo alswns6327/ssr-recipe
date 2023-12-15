@@ -15,12 +15,14 @@ import PreloadContext from './lib/PreloadContext';
 import createSagaMiddleware from '@redux-saga/core';
 import { END } from 'redux-saga';
 
+import {ChunkExtractor, ChunkExtractorManager} from '@loadable/server';
 
+const statsFile = path.resolve('./build/loadable-stats.json');
 const manifest = JSON.parse(
     fs.readFileSync(path.resolve('./build/asset-manifest.json'), 'utf8')
 );
 
-function createPage(root, stateScript){
+function createPage(root, tags){
     return `<!DOCTYPE html>
     <html leng="en">
         <head>
@@ -32,13 +34,13 @@ function createPage(root, stateScript){
             />
             <meta name="theme-color" content="#000000"/>
             <title>React App</title>
-            <link href="${manifest.files['main.css']}" rel="stylesheet"/>
+            ${tags.styles}
+            ${tags.links}
         </head>
         <body>
             <noscript>You need to enable Javascript to run this app.</noscript>
             <div id="root">${root}</div>
-            ${stateScript}
-            <script src="${manifest.files['main.js']}"></script>
+            ${tags.script}
         </body>
     </html>
     `;
@@ -54,6 +56,7 @@ const serverRender = async (req, res, next) => {
     const sagaMiddleware = createSagaMiddleware();
     const store = createStore(rootReducer, applyMiddleware(thunk, sagaMiddleware));
 
+    // sagaMiddleware.run(rootSaga); // 왜 run을 두 번 하지??
     const sagaPromise = sagaMiddleware.run(rootSaga).toPromise();
 
     const preloadContext = {
@@ -61,14 +64,20 @@ const serverRender = async (req, res, next) => {
         promises : []
     }
 
+    const extractor = new ChunkExtractor({statsFile}); //
+
+
+
     const jsx =(
-        <PreloadContext.Provider value={preloadContext}>
-            <Provider store={store}>
-                <StaticRouter location={req.url} context={context}>
-                    <App/>
-                </StaticRouter>
-            </Provider>
-        </PreloadContext.Provider>
+        <ChunkExtractorManager extractor={extractor}>
+            <PreloadContext.Provider value={preloadContext}>
+                <Provider store={store}>
+                    <StaticRouter location={req.url} context={context}>
+                        <App/>
+                    </StaticRouter>
+                </Provider>
+            </PreloadContext.Provider>
+        </ChunkExtractorManager>
     );
     ReactDOMServer.renderToStaticMarkup(jsx) // renderToStaticMarkup으로 한번 렌더링 실행
     store.dispatch(END); // redux-saga의 END 액션 발생시 액션을 모니터링 하는 사가들이 모두 종료됨
@@ -84,7 +93,14 @@ const serverRender = async (req, res, next) => {
     const root = ReactDOMServer.renderToString(jsx); // 렌더링 실행
     const stateString = JSON.stringify(store.getState()).replace(/</g, '\\u003c');
     const stateScript = `<script>__PRELOADED_STATE__ = ${stateString}</script>`; // 리덕스 초기 상태를 스크립트로 주입
-    res.send(createPage(root, stateScript));  // 결과물 응답
+
+    const tags = {
+        script: stateScript + extractor.getScriptTags(), // 스크립트 앞부분에 리덕스 상태 넣기
+        links: extractor.getLinkTags(),
+        styles: extractor.getStyleTags()
+    }
+
+    res.send(createPage(root, tags));  // 결과물 응답
 }
 
 const serve = express.static(path.resolve('./build'), {
