@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getUser } from '../modules/users';
-import { Preloader } from '../lib/PreloadContext';
+import { Preloader, usePreloader } from '../lib/PreloadContext';
 import User from '../components/User';
 
 const UserContainer = ({ id }) => {
@@ -9,6 +9,8 @@ const UserContainer = ({ id }) => {
     const user = useSelector(state => state.users.user);
 
     const dispatch = useDispatch();
+
+    usePreloader(() => dispatch(getUser(id))); // 서버 사이드 렌더링을 할 때 API 호출하기
 
     useEffect(() => {
         if(user && user.id === parseInt(id, 10)) return; //사용자가 존재하고 id가 일치하는 경우 요청하지 않음
@@ -19,6 +21,7 @@ const UserContainer = ({ id }) => {
     // null 대신 Preloader 반환
 
     if(!user){
+        
         return <Preloader resolve={()=>dispatch(getUser(id))}/>;
     }
 
